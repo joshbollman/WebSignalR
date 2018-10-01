@@ -15,6 +15,11 @@ namespace WebSignalR
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
             if (!Connections.ContainsKey(groupName))
                 Connections.Add(groupName, 1);
+            else if (Connections[groupName] == 4)
+            {
+                await Clients.Caller.SendAsync("GroupMessage", "", "The group is full.");
+                return;
+            }
             else
                 Connections[groupName] += 1;
 
