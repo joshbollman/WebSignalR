@@ -21,6 +21,8 @@ namespace WebSignalR.Models
 
         public int Excluded { get; private set; }
 
+        public int Current { get; private set; }
+
         public int[] Order { get; private set; }
 
         public OrderModel()
@@ -33,33 +35,22 @@ namespace WebSignalR.Models
             Excluded = Order[val];
             Order[val] = 0;
         }
-    }
 
-    public static class ThreadSafeRandom
-    {
-        [ThreadStatic] private static Random Local;
-
-        public static Random ThisThreadsRandom
+        public int GetNext()
         {
-            get { return Local ?? (Local = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId))); }
-        }
-    }
+            Current++;
 
-    static class MyExtensions
-    {
-        public static IList<T> Shuffle<T>(this IList<T> list)
-        {
-            int n = list.Count;
-            while (n > 1)
+            if (Current < Order.Length - 1)
             {
-                n--;
-                int k = ThreadSafeRandom.ThisThreadsRandom.Next(n + 1);
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
+                if (Order[Current] > 0)
+                    return Order[Current];
+                else
+                {
+                    return GetNext();
+                }
             }
-
-            return list;
+            else
+                return 0;
         }
     }
 }

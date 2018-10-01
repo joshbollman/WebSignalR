@@ -5,6 +5,8 @@
     &nbsp;
 </div>
 
+<button id="start-session" style="display: none">Start Session</button>
+
 <div id="entrance">
     <label for="nick">Enter your nickname:</label>
     <input type="text" id="nick" />
@@ -22,10 +24,24 @@
 </div>
 
 <div id="chat" style="display: none">
-    <h3 id="spn-nick"></h3>
-    <h4 id="spn-group"></h4>
+    <div>
+        <h3 id="spn-nick"></h3>
+        <h4 id="spn-group"></h4>
+    </div>
+
     <form id="frm-send-message" action="#">
         <label for="message">Message:</label>
+        <div class="container" style="display:flex">
+            <div>
+                <img style="height:100px;" src="https://www.readersdigest.ca/wp-content/uploads/sites/14/2011/01/4-ways-cheer-up-depressed-cat.jpg" alt="W3Schools.com">
+                <br /><input type="radio" name="selection" value="left" /> &lt;-- Left |
+            </div>
+            <div>
+                <img style="height:100px;" src="https://www.readersdigest.ca/wp-content/uploads/sites/14/2011/01/4-ways-cheer-up-depressed-cat.jpg" alt="W3Schools.com">
+                <br />| Right --&gt; <input type="radio" name="selection" value="right" />
+            </div>
+        </div>
+        
         <input type="text" id="message" />
         <input type="submit" id="send" value="GroupMessage" class="send" />
     </form>
@@ -34,10 +50,13 @@
     <ul id="messages"></ul>
 </div>
 
+
 @*<img style="height:100px;" src="https://www.readersdigest.ca/wp-content/uploads/sites/14/2011/01/4-ways-cheer-up-depressed-cat.jpg" alt="W3Schools.com">*@
 
 <script src="lib/signalr/signalr.min.js"></script>
 <script src="lib/jquery/dist/jquery.min.js"></script>
+
+
 
 <script>
 
@@ -51,14 +70,30 @@
         appendLine(nick, message);
     });
 
+    connection.on('TurnEligible', (message) => {
+        if (message.toString().localeCompare('true') == 0) {
+            $('#send').removeAttr('disabled');
+        }
+        else {
+            $('#send').attr('disabled', 'disabled');
+        }
+    });
+
+    document.getElementById('start-session').addEventListener('click', event => {
+        let group = $('#spn-group').text();
+        connection.invoke('StartGroupSession', group);
+        event.preventDefault();
+    });
+
     document.getElementById('frm-send-message').addEventListener('submit', event => {
         let message = $('#message').val();
+        let selection = $('input[name=selection]:checked').val()
         let group = $('#spn-group').text();
         let nick = $('#spn-nick').text();
 
         $('#message').val('');
 
-        connection.invoke('GroupMessage', group, nick, message);
+        connection.invoke('GroupMessage', group, nick, nick + ' chose the ' + selection + ' image<br/>' + message);
         event.preventDefault();
     });
 
@@ -86,6 +121,7 @@
     function continueToChat() {
         $('#spn-group').text($('#group').val());
         $('#choose-group').hide();
+        $('#start-session').show();
         $('#chat').show();
 
         let group = $('#spn-group').text();
