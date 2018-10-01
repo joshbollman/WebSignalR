@@ -8,15 +8,26 @@
 <div id="entrance">
     <label for="nick">Enter your nickname:</label>
     <input type="text" id="nick" />
+    <button onclick="continueToGroup()">Continue</button>
+</div>
+
+<div id="choose-group" style="display:none">
+    <label for="group">Choose a group:</label>
+    <select id="group">
+        <option value="Group 1">Group 1</option>
+        <option value="Group 2">Group 2</option>
+        <option value="Group 3">Group 3</option>
+    </select>
     <button onclick="continueToChat()">Continue</button>
 </div>
 
 <div id="chat" style="display: none">
     <h3 id="spn-nick"></h3>
+    <h4 id="spn-group"></h4>
     <form id="frm-send-message" action="#">
         <label for="message">Message:</label>
         <input type="text" id="message" />
-        <input type="submit" id="send" value="SendAll" class="send" />
+        <input type="submit" id="send" value="GroupMessage" class="send" />
     </form>
     <div class="clear">
     </div>
@@ -36,17 +47,18 @@
 
     connection.start().catch(err => console.error(err.toString()));
 
-    connection.on('SendAll', (nick, message) => {
+    connection.on('GroupMessage', (nick, message) => {
         appendLine(nick, message);
     });
 
     document.getElementById('frm-send-message').addEventListener('submit', event => {
         let message = $('#message').val();
+        let group = $('#spn-group').text();
         let nick = $('#spn-nick').text();
 
         $('#message').val('');
 
-        connection.invoke('SendAll', nick, message);
+        connection.invoke('GroupMessage', group, nick, message);
         event.preventDefault();
     });
 
@@ -65,21 +77,29 @@
         $('#messages').append(li);
     };
 
-    function continueToChat() {
+    function continueToGroup() {
         $('#spn-nick').text($('#nick').val());
         $('#entrance').hide();
+        $('#choose-group').show();
+    }
+
+    function continueToChat() {
+        $('#spn-group').text($('#group').val());
+        $('#choose-group').hide();
         $('#chat').show();
 
+        let group = $('#spn-group').text();
         let nick = $('#spn-nick').text();
 
-        connection.invoke('SendAll', nick, nick + ' has joined the chat.');
+        connection.invoke('JoinGroup', group, nick);
         event.preventDefault();
     }
 
     $(window).on("unload", function (e) {
+        let group = $('#spn-group').text();
         let nick = $('#spn-nick').text();
 
-        connection.invoke('SendAll', nick, nick + ' has left the chat.');
+        connection.invoke('GroupMessage', group, nick, nick + ' has left the chat.');
         event.preventDefault();
     });
 </script>
