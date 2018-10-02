@@ -26,7 +26,7 @@ namespace WebSignalR
                 });
             else if (Connections[groupName].Count() == 4)
             {
-                await Clients.Caller.SendAsync("GroupMessage", "", $"Group '{groupName}' is full.");
+                await Clients.Caller.SendAsync("GroupMessage", "Server", $"Group '{groupName}' is full.");
                 return;
             }
             else
@@ -38,7 +38,7 @@ namespace WebSignalR
                         Enabled = true
                     });
 
-            await Clients.Group(groupName).SendAsync("GroupMessage", "Server", nick  + " has joined the chat.");
+            await Clients.Group(groupName).SendAsync("GroupMessage", "Server", "@" + nick + " has joined the chat.");
         }
 
         public async Task LeaveGroup(string groupName, string nick)
@@ -49,12 +49,12 @@ namespace WebSignalR
             else if(Connections[groupName].Any(c => c.ClientID == Context.ConnectionId))
                 Connections[groupName].RemoveAll(c => c.ClientID == Context.ConnectionId);
 
-            await Clients.Group(groupName).SendAsync("GroupMessage", nick, nick + " has left the chat.");
+            await Clients.Group(groupName).SendAsync("GroupMessage", "Server", "@" + nick + " has left the chat.");
         }
 
         public async Task GroupMessage(string groupName, string nick, string message)
         {
-            await Clients.Group(groupName).SendAsync("GroupMessage", nick, message);
+            await Clients.Group(groupName).SendAsync("GroupMessage", "@" + nick, message);
         }
 
         public async Task StartGroupSession(string groupName)
@@ -65,7 +65,7 @@ namespace WebSignalR
             group.FullReset();
 
             await TurnEligible(groupName, group.ClientOrder, group.CurrentClient.ClientID);
-            await GroupMessage(groupName, "Server", $"it is now {group.CurrentClient.UserName}'s turn.");
+            await GroupMessage(groupName, "Server", $"it is now @{group.CurrentClient.UserName}'s turn.");
         }
 
         public async Task StartTurn(string groupName)
@@ -93,7 +93,7 @@ namespace WebSignalR
                 var client = group.ClientOrder.First(c => c.ClientID == Context.ConnectionId);
                 client.Plays.Add(action);
 
-                await Clients.Group(groupName).SendAsync("Action", client.UserName + " chose " + action + "<br/>Plays: " + string.Join(' ', client.Plays.ToArray()));
+                await Clients.Group(groupName).SendAsync("Action", "@" + client.UserName + " chose " + action + "<br/>Plays: " + string.Join(' ', client.Plays.ToArray()));
             }
         }
 

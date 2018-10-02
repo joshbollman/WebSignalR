@@ -4,32 +4,34 @@
 
 <link rel="stylesheet" href="~/css/site.css" />
 
-<button id="btnShowModal">
-    modal
-</button>
-<br />
-
 @*tabindex="-1"*@
 <div class="modal" id="chatModal">
     <div class="modal-dialog" id="modalDialog">
         <div class="modal-content">
             <div class="modal-header">
-                <div style="float:left;">Chat</div>
+                <div style="float:left;">
+                    <img id="modalConnected" />
+                    <input type="text" id="modalHandle" />
+                </div>
                 <div style="float:right;">
-                    <select>
+                    <select id="modalGroup" onchange="joinGroup()">
+                        <option value="" disabled="disabled" selected="selected"> -- select an option -- </option>
                         @for (int i = 0; i < 5; i++)
                         {
-                            <option value="group{@i}">Group @i</option>
+                            <option value="group @i">Group @i</option>
                         }
                     </select>
                     <button id="collapseModal">v</button>
                 </div>
             </div>
-            <div class="modal-body" id="chatBody">
+            <div class="modal-body" id="modalBody">
+                <ul id="modalList"></ul>
             </div>
-            <div class="modal-footer" id="chatFooter" style="display:flex">
-                <input type="text" id="message" style="float:left;flex-grow: 100;"/>
-                <input type="submit" id="modalSend" value="Send" class="send" />
+            <div class="modal-footer" id="modalFooter" style="display:flex">
+                <form id="frm-modal-message" style="flex-grow: 100;">
+                    <input type="text" id="modalMessage" style="float:left;flex-grow: 100;" />
+                    <input type="submit" id="modalSend" value="Send" class="send" />
+                </form>
             </div>
         </div>
     </div>
