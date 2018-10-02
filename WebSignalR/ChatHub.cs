@@ -15,6 +15,8 @@ namespace WebSignalR
 
         public async Task JoinGroup(string groupName, string nick)
         {
+            //await Clients.Client(Context.ConnectionId).SendAsync("ConnectionID", Context.ConnectionId);
+
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
             if (!Connections.ContainsKey(groupName))
                 Connections.Add(groupName, new List<UserModel>() {
@@ -38,7 +40,7 @@ namespace WebSignalR
                         Enabled = true
                     });
 
-            await Clients.Group(groupName).SendAsync("GroupMessage", "Server", "@" + nick + " has joined the chat.");
+            await Clients.Group(groupName).SendAsync("GroupMessage", "Server", "@" + nick + " has joined the chat." );
         }
 
         public async Task LeaveGroup(string groupName, string nick)

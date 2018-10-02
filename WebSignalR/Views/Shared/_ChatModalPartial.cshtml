@@ -3,6 +3,7 @@
 *@
 
 <link rel="stylesheet" href="~/css/site.css" />
+<script src="~/lib/signalr/signalr.min.js"></script>
 
 @*tabindex="-1"*@
 <div class="modal" id="chatModal">
@@ -12,6 +13,7 @@
                 <div style="float:left;">
                     <img id="modalConnected" />
                     <input type="text" id="modalHandle" />
+                    <div id="modalChatID" style="display:none;"></div>
                 </div>
                 <div style="float:right;">
                     <select id="modalGroup" onchange="joinGroup()">

@@ -67,7 +67,7 @@
 
     connection.start().catch(err => console.error(err.toString()));
 
-    connection.on('GroupMessage', (nick, message) => {
+    connection.on('GroupAMessage', (nick, message) => {
         appendLine(nick, message);
     });
 
