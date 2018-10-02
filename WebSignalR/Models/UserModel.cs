@@ -15,6 +15,6 @@ namespace WebSignalR.Models
 
         public bool Enabled { get; set; }
 
-        public int[] Plays { get; set; }
+        public List<string> Plays { get; set; }
     }
 }

@@ -1,0 +1,36 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+<link rel="stylesheet" href="~/css/site.css" />
+
+<button id="btnShowModal">
+    modal
+</button>
+<br />
+
+@*tabindex="-1"*@
+<div class="modal" id="chatModal">
+    <div class="modal-dialog" id="modalDialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="float:left;">Chat</div>
+                <div style="float:right;">
+                    <select>
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <option value="group{@i}">Group @i</option>
+                        }
+                    </select>
+                    <button id="collapseModal">v</button>
+                </div>
+            </div>
+            <div class="modal-body" id="chatBody">
+            </div>
+            <div class="modal-footer" id="chatFooter" style="display:flex">
+                <input type="text" id="message" style="float:left;flex-grow: 100;"/>
+                <input type="submit" id="modalSend" value="Send" class="send" />
+            </div>
+        </div>
+    </div>
+</div>

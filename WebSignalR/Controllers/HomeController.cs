@@ -35,6 +35,12 @@ namespace WebSignalR.Controllers
             return View();
         }
 
+        public IActionResult ModalAction(int Id)
+        {
+            ViewBag.Id = Id;
+            return PartialView("_ChatModalPartial");
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -85,9 +85,16 @@ namespace WebSignalR
             }
         }
 
-        public async Task DoTurnAction(string group)
+        public async Task DoTurnAction(string groupName, string action)
         {
-            await Clients.Group(group).SendAsync("Action", "");
+            if (ChatGroups.ContainsKey(groupName))
+            {
+                var group = ChatGroups[groupName];
+                var client = group.ClientOrder.First(c => c.ClientID == Context.ConnectionId);
+                client.Plays.Add(action);
+
+                await Clients.Group(groupName).SendAsync("Action", client.UserName + " chose " + action + "<br/>Plays: " + string.Join(' ', client.Plays.ToArray()));
+            }
         }
 
         public async Task AskEligible(string group)

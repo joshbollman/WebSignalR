@@ -1,5 +1,32 @@
 ﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification\ 
 for details on configuring this project to bundle and minify static web assets. */
+
+.modal-dialog {
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+    margin: 0px;
+    max-width: 400px;
+}
+
+.modal-header {
+    max-width: 400px;
+}
+
+.modal-body {
+    max-height: 300px;
+    overflow: auto;
+    max-width: 400px;
+}
+
+.modal {
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+    margin: 0px;
+}
+
+/*--- Default ---*/
 body {
     padding-top: 50px;
     padding-bottom: 20px;
@@ -35,3 +62,4 @@ body {
         display: none;
     }
 }
+/*--- Default ---*/
