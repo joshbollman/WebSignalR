@@ -13,6 +13,16 @@ namespace WebSignalR
 
         public static Dictionary<string, GroupModel> ChatGroups { get; set; } = new Dictionary<string, GroupModel>();
 
+        //public override Task OnDisconnectedAsync(Exception exception)
+        //{
+        //    try
+        //    {
+        //        //Clients.Caller.SendAsync("GroupMessage", "Server", Context.ConnectionId);
+        //    }
+        //    catch { }
+        //    return base.OnDisconnectedAsync(exception);
+        //}
+
         public async Task JoinGroup(string groupName, string nick)
         {
             //await Clients.Client(Context.ConnectionId).SendAsync("ConnectionID", Context.ConnectionId);
@@ -41,6 +51,7 @@ namespace WebSignalR
                     });
 
             await Clients.Group(groupName).SendAsync("GroupMessage", "Server", "@" + nick + " has joined the chat." );
+            //await Clients.Caller.SendAsync("GroupMessage", "x", "x");
         }
 
         public async Task LeaveGroup(string groupName, string nick)
@@ -56,6 +67,7 @@ namespace WebSignalR
 
         public async Task GroupMessage(string groupName, string nick, string message)
         {
+            await Clients.Caller.SendAsync("GroupMessage", "", Context.ConnectionId);
             await Clients.Group(groupName).SendAsync("GroupMessage", "@" + nick, message);
         }
 

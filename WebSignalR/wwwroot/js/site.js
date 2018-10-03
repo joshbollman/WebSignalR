@@ -35,31 +35,54 @@ $(document).ready(function () {
 
     $('#modalConnected').attr('src', '/images/error.svg');
     $('#modalConnected').height(15).width(15);
+
+    console.log(connection.onclose);
+
+
 });
 /*----- Chat Modal -----*/
 
 
 /*----- SignalR Chat -----*/
-const signalRConn = new signalR.HubConnectionBuilder()
+const connection = new signalR.HubConnectionBuilder()
     .withUrl("/chat")
+    .configureLogging(signalR.LogLevel.Information)
     .build();
 
-signalRConn.start().catch(err => console.error(err.toString()));
+connection.start().catch(err => console.error(err.toString()));
 
-signalRConn.on('ConnectionID', (message) => {
+connection.onclose(function () {
+    console.log("closed");
+    setTimeout(function () {
+        connection.start();
+    }, 1000);
+    setTimeout(function () {
+        joinGroup();
+    }, 2000);
+
+});
+
+//connection.hub.reconnecting(function () {
+//    notifyUserOfTryingToReconnect(); // Your function to notify user.
+//});
+
+connection.on('ConnectionID', (message) => {
     $('#modalConnected').attr('src', '/images/success.svg');
     $('#modalConnected').height(15).width(15);
 
     $('#modalChatID').innerHTML = message;
 });
 
-
-signalRConn.on('GroupMessage', (nick, message) => {
+connection.on('GroupMessage', (nick, message) => {
     console.log(message);
     appendLine(nick, message);
     $('#modalConnected').attr('src', '/images/success.svg');
     $('#modalConnected').height(15).width(15);
 });
+
+function disconnect() {
+    connection.stop();
+}
 
 document.getElementById('frm-modal-message').addEventListener('submit', event => {
     let message = $('#modalMessage').val();
@@ -70,7 +93,9 @@ document.getElementById('frm-modal-message').addEventListener('submit', event =>
 
     console.log('here');
 
-    signalRConn.invoke('GroupMessage', group, nick, message);
+    joinGroup();
+
+    connection.invoke('GroupMessage', group, nick, message);
     event.preventDefault();
 });
 
@@ -78,9 +103,7 @@ function joinGroup() {
     let group = $('#modalGroup').val();
     let nick = $('#modalHandle').val();
 
-    signalRConn.invoke('JoinGroup', group, nick);
-    $('#modalConnected').attr('src', '/images/success.svg');
-    event.preventDefault();
+    connection.invoke('JoinGroup', group, nick);
 }
 
 function appendLine(nick, message) {
@@ -108,7 +131,7 @@ $(window).on("unload", function (e) {
     let group = $('input[name=modalGroup]:checked').val();
     let nick = $('#modalHandle').val();
 
-    signalRConn.invoke('GroupMessage', group, nick, nick + ' has left the chat.');
+    connection.invoke('GroupMessage', group, nick, nick + ' has left the chat.');
     event.preventDefault();
 });
 /*----- SignalR Chat -----*/
