@@ -123,6 +123,21 @@ connChatModal.on('ConnectionID', (message) => {
     checkConnection();
 });
 
+connChatModal.on('SelfMessage', (message) => {
+    appendSelf(message);
+
+    $('#modalConnected').attr('src', '/images/chat/success.png');
+    $('#modalConnected').height(15).width(15);
+
+    if (!focused) {
+        $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge_notify.ico');
+    }
+    else {
+        $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge.ico');
+    }
+    $("#modalBody").scrollTop(function () { return this.scrollHeight; });
+});
+
 connChatModal.on('GroupMessage', (nick, message) => {
     appendLine(nick, message);
 
@@ -221,12 +236,24 @@ function appendLine(nick, message) {
     $('#modalList').append(li);
 }
 
+function appendSelf(message) {
+    let msgElement = document.createElement('em');
+    msgElement.innerHTML = message.toString().toScriptlessString();
+    msgElement.style = 'float:right;color:#005A9C;';
+
+    $('#modalList').append(msgElement);
+    $('#modalList').append(document.createElement('br'));
+}
+
+String.prototype.toScriptlessString = function () {
+    console.log(this);
+    return this.replace("<script>", "&lt;script&gt;").replace("<\/script>", "&lt;/script&gt;");
+}
+
 $(window).on("unload", function (e) {
     let group = $('input[name=modalGroup]:checked').val();
     let nick = $('#modalHandle').val();
 
     checkConnection();
-
-
 });
 /*----- SignalR Chat -----*/

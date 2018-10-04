@@ -75,9 +75,17 @@ namespace WebSignalR
         public async Task GroupMessage(string groupName, string nick, string message)
         {
             if (groupName == "general")
-                await Clients.All.SendAsync("GroupMessage", nick + "(general)", message);
+            {
+                await Clients.Others.SendAsync("GroupMessage", nick + "[general]", message);
+                await SelfMessage("[general] " + message);
+            }
 
             await Clients.Group(groupName).SendAsync("GroupMessage", nick, message);
+        }
+
+        public async Task SelfMessage(string message)
+        {
+            await Clients.Caller.SendAsync("SelfMessage", message);
         }
         #endregion
 
