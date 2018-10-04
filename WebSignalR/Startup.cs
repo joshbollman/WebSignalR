@@ -35,7 +35,11 @@ namespace WebSignalR
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             //SignalR
-            services.AddSignalR();
+            services.AddSignalR(hubOptions =>
+            {
+                hubOptions.KeepAliveInterval = TimeSpan.FromMinutes(1);
+                hubOptions.EnableDetailedErrors = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

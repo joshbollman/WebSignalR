@@ -16,5 +16,12 @@ namespace WebSignalR.Models
         public bool Enabled { get; set; }
 
         public List<string> Plays { get; set; }
+
+        public int CurrentCard { get; set; }
+
+        public UserModel()
+        {
+            Plays = new List<string>();
+        }
     }
 }

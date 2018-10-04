@@ -13,6 +13,8 @@ namespace WebSignalR.Models
 
         public List<UserModel> ClientOrder { get; set; }
 
+        public bool InProgress { get; set; }
+
         public GroupModel()
         {
             Order = new OrderModel();
@@ -44,6 +46,9 @@ namespace WebSignalR.Models
                 CurrentClient = ClientOrder[0];
             else
                 CurrentClient = ClientOrder[o + 1];
+
+            if (!CurrentClient.Enabled)
+                NextClient();
 
             return CurrentClient.ClientID;
         }

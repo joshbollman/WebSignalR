@@ -1,24 +1,20 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-*@
-
+﻿
 <link rel="stylesheet" href="~/css/site.css" />
 <script src="~/lib/signalr/signalr.min.js"></script>
 
-@*tabindex="-1"*@
 <div class="modal" id="chatModal">
     <div class="modal-dialog" id="modalDialog">
         <div class="modal-content">
             <div class="modal-header">
                 <div style="float:left;">
-                    <img id="modalConnected" />
-                    <input type="text" id="modalHandle" />
+                    <button id="modalToggleConn" title="Connect to Chat?" onclick="toggleConnection()"><img id="modalConnected" /></button>
+                    <input type="text" id="modalHandle" style="width:auto;" value="Guest_@DateTimeOffset.UtcNow.ToString("ddhhssfff")" />
                     <div id="modalChatID" style="display:none;"></div>
-                    <button onclick="disconnect()">disconnect</button>
                 </div>
                 <div style="float:right;">
                     <select id="modalGroup" onchange="joinGroup()">
-                        <option value="" disabled="disabled" selected="selected"> -- select an option -- </option>
+                        <!--<option value="" disabled="disabled" selected="selected"> -- select an option -- </option>-->
+                        <option value="general" selected="selected">General Chat</option>
                         @for (int i = 0; i < 5; i++)
                         {
                             <option value="group @i">Group @i</option>

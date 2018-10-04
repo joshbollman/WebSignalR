@@ -1,9 +1,4 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
-
-
+﻿
 /*----- Chat Modal -----*/
 $(document).ready(function () {
     $("#collapseModal").click(function () {
@@ -33,55 +28,109 @@ $(document).ready(function () {
     chatModal.height(modalDialog.height()).width(modalDialog.width());
     chatModal.css({ position: 'fixed', bottom: 0, right: 0, left: 'auto', top: 'auto' });
 
-    $('#modalConnected').attr('src', '/images/error.svg');
+    $('#modalConnected').attr('src', '/images/chat/error.png');
     $('#modalConnected').height(15).width(15);
-
-    console.log(connection.onclose);
-
-
+    $('.modal-open').removeClass('modal-open');
+    $('#modalChatID').html('closed');
 });
 /*----- Chat Modal -----*/
 
+var focused = true;
+
+window.onfocus = function () {
+    focused = true;
+    $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge.ico');
+};
+
+window.onblur = function () {
+    focused = false;
+};
 
 /*----- SignalR Chat -----*/
-const connection = new signalR.HubConnectionBuilder()
+const connChatModal = new signalR.HubConnectionBuilder()
     .withUrl("/chat")
-    .configureLogging(signalR.LogLevel.Information)
     .build();
 
-connection.start().catch(err => console.error(err.toString()));
+connChatModal.serverTimeoutInMilliseconds = 1000 * 60 * 5;
 
-connection.onclose(function () {
-    console.log("closed");
-    setTimeout(function () {
-        connection.start();
-    }, 1000);
-    setTimeout(function () {
-        joinGroup();
-    }, 2000);
+//connChatModal.start().catch(err => console.error(err.toString()));
 
+connChatModal.onclose(function () {
+    $('#modalConnected').attr('src', '/images/chat/error.png');
+    if ($('#modalChatID').html().localeCompare('closed') !== 0) {
+        setTimeout(function () {
+            console.log("restarting connection...");
+            connChatModal.start().catch(err => console.error(err.toString()));
+            setTimeout(function () {
+                joinGroup();
+            }, 5000);
+        }, 5000);
+    }
 });
 
-//connection.hub.reconnecting(function () {
-//    notifyUserOfTryingToReconnect(); // Your function to notify user.
-//});
-
-connection.on('ConnectionID', (message) => {
-    $('#modalConnected').attr('src', '/images/success.svg');
+connChatModal.on('ConnectionID', (message) => {
+    $('#modalConnected').attr('src', '/images/chat/success.png');
     $('#modalConnected').height(15).width(15);
 
-    $('#modalChatID').innerHTML = message;
+    $('#modalChatID').html(message);
+
+    checkConnection();
 });
 
-connection.on('GroupMessage', (nick, message) => {
-    console.log(message);
+connChatModal.on('GroupMessage', (nick, message) => {
     appendLine(nick, message);
-    $('#modalConnected').attr('src', '/images/success.svg');
+
+    $('#modalConnected').attr('src', '/images/chat/success.png');
     $('#modalConnected').height(15).width(15);
+
+    if (!focused) {
+        $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge_notify.ico');
+    }
+    else {
+        $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge.ico');
+    }
+    $("#modalBody").scrollTop(function () { return this.scrollHeight; });
 });
+
+function toggleConnection() {
+    if ($('#modalChatID').html().localeCompare('closed') === 0) {
+        console.log('modalToggleConn: connect');
+        $('#modalChatID').html('open');
+        checkConnection();
+        $('#modalConnected').attr('src', '/images/chat/success.png');
+    }
+    else {
+        console.log('modalToggleConn: disconnect');
+        disconnect();
+        $('#modalChatID').html('closed');
+    }
+}
+
+function checkConnection() {
+    var state = connChatModal.connection.connectionState;
+
+    if (state === 4 || state === 2) {
+        console.log('restarting connection...');
+
+        let msgElement = document.createElement('em');
+        msgElement.innerHTML = 'Connecting to chat...';
+        msgElement.style = 'float:left;color:#005A9C;';
+
+        $('#modalList').append(msgElement);
+        $('#modalList').append(document.createElement('br'));
+        connChatModal.start().catch(err => console.error(err.toString()));
+        $('#modalConnected').attr('src', '/images/chat/success.png');
+        $('#modalChatID').html('open');
+
+        return 2;
+    }
+
+    return 0;
+}
 
 function disconnect() {
-    connection.stop();
+    connChatModal.stop();
+    $('#modalChatID').html('closed');
 }
 
 document.getElementById('frm-modal-message').addEventListener('submit', event => {
@@ -91,11 +140,13 @@ document.getElementById('frm-modal-message').addEventListener('submit', event =>
 
     $('#modalMessage').val('');
 
-    console.log('here');
+    var time = checkConnection();
 
-    joinGroup();
+    setTimeout(function () {
+        joinGroup();
+        connChatModal.invoke('GroupMessage', group, nick, message);
+    }, time * 1000);
 
-    connection.invoke('GroupMessage', group, nick, message);
     event.preventDefault();
 });
 
@@ -103,7 +154,7 @@ function joinGroup() {
     let group = $('#modalGroup').val();
     let nick = $('#modalHandle').val();
 
-    connection.invoke('JoinGroup', group, nick);
+    connChatModal.invoke('JoinGroup', group, nick);
 }
 
 function appendLine(nick, message) {
@@ -111,7 +162,7 @@ function appendLine(nick, message) {
     nameElement.innerText = `${nick}:`;
 
     let msgElement = document.createElement('em');
-    msgElement.innerHTML = message.replace("<script>", "&lt;script&gt;").replace("<\/script>", "&lt;/script&gt;");
+    msgElement.innerHTML = '<br/>' + message.replace("<script>", "&lt;script&gt;").replace("<\/script>", "&lt;/script&gt;");
 
     let li = document.createElement('li');
 
@@ -120,18 +171,19 @@ function appendLine(nick, message) {
     //    li.style.cssText = "float:right;"; 
     //}
     //else {
-        li.appendChild(nameElement);
-        li.appendChild(msgElement);
+    li.appendChild(nameElement);
+    li.appendChild(msgElement);
     //}
 
     $('#modalList').append(li);
-};
+}
 
 $(window).on("unload", function (e) {
     let group = $('input[name=modalGroup]:checked').val();
     let nick = $('#modalHandle').val();
 
-    connection.invoke('GroupMessage', group, nick, nick + ' has left the chat.');
-    event.preventDefault();
+    checkConnection();
+
+
 });
 /*----- SignalR Chat -----*/
