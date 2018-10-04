@@ -19,14 +19,48 @@ namespace WebSignalR
 
     static class MyExtensions
     {
-        public static string SanitizeMessage(this string message)
-        {
-            return message.Replace("<", "&lt;").Replace(">", "&gt;");
-        }
+        #region Message Formatting and Sanitizing
+        /// <summary>
+        /// Transforms '&lt;' and '&gt;' to "&amp;lt;" and "&amp;gt;", respectively
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static string SanitizeMessage(this string message) => message.Replace("<", "&lt;").Replace(">", "&gt;");
 
+        /// <summary>
+        /// Transforms spaces " " to "&amp;nbsp;"
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static string ReplaceSpaces(this string message) => message.Replace(" ", "&nbsp;");
+
+        /// <summary>
+        /// Replaces line breaks with 'br' elements. Condenses 2+ consecutive line breaks to 1.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public static string ReplaceLineBreaks(this string message)
         {
-            return message.Replace("\r\n", "<br/>").Replace("\r", "<br/>").Replace("\n", "<br/>");
+            var lines = message.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            var newLines = new List<string>();
+
+            int contEmpty = 0;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (string.IsNullOrEmpty(lines[i].Trim()))
+                {
+                    if (contEmpty++ >= 1)
+                        continue;
+
+                    newLines.Add(lines[i]);
+                    continue;
+                }
+
+                newLines.Add(lines[i]);
+                contEmpty = 0;
+            }
+
+            return string.Join("<br/>", newLines);
         }
 
         /// <summary>
@@ -39,7 +73,7 @@ namespace WebSignalR
         public static string FormatImageTag(this string message, int height, int width)
         {
             string[] parts;
-            if (message.StartsWith("$img", StringComparison.InvariantCultureIgnoreCase) && (parts = message.Split('(')).Length > 1)
+            if (message.TrimStart().StartsWith("$img", StringComparison.InvariantCultureIgnoreCase) && (parts = message.Split('(')).Length > 1)
             {
                 string img = $"<img src=\"{parts[1].Substring(0,parts[1].Length - 1).Trim()}\" style=\"max-height:{(height == 0 ? "auto" : height.ToString() + "px")};max-width:{(width == 0 ? "auto" : width.ToString()) + "px"};\">";
                 return img;
@@ -56,7 +90,7 @@ namespace WebSignalR
         public static string FormatLink(this string message)
         {
             Match linkMatch;
-            if (message.StartsWith("$link", StringComparison.InvariantCultureIgnoreCase) && (linkMatch = Regex.Match(message, @"\(([^)]+)\)")).Groups.Count > 1)
+            if (message.TrimStart().StartsWith("$link", StringComparison.InvariantCultureIgnoreCase) && (linkMatch = Regex.Match(message, @"\(([^)]+)\)")).Groups.Count > 1)
             {
                 string link = $"<a href=\"{linkMatch.Groups[1].Value}\">{{0}}</a>";
 
@@ -73,23 +107,26 @@ namespace WebSignalR
         }
 
         /// <summary>
-        /// 
+        /// Transforms code chunk to code element.  Replaces spaces with &nbsp; to keep indentation
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">Input should look like $code:public static void Main...</param>
         /// <returns></returns>
         public static string FormatCode(this string message)
         {
-            throw new NotImplementedException();
-
-            string[] parts;
-            if (message.StartsWith("$code", StringComparison.InvariantCultureIgnoreCase) && (parts = message.Split(':')).Length > 1)
+            if (message.TrimStart().StartsWith("$code", StringComparison.InvariantCultureIgnoreCase))
             {
-                string code = "";
-                return code;
+                var code = message.Substring(message.IndexOf(':') + 1).TrimStart();
+                code = ReplaceSpaces(code.ReplaceLineBreaks());
+
+                string element = $"<code>{code}</code>";
+
+                return element;
             }
 
             return message;
         }
+        #endregion
+
         #region Shuffle and Randomize
         public static string ToNumberWord(this int i)
         {
