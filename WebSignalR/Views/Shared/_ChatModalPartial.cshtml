@@ -17,7 +17,7 @@
                         <option value="general" selected="selected">General Chat</option>
                         @for (int i = 0; i < 5; i++)
                         {
-                            <option value="group @i">Group @i</option>
+                            <option value="group @i">Chat-Room @i</option>
                         }
                     </select>
                     <button id="collapseModal">v</button>
@@ -27,9 +27,9 @@
                 <ul id="modalList"></ul>
             </div>
             <div class="modal-footer" id="modalFooter" style="display:flex">
-                <form id="frm-modal-message" style="flex-grow: 100;">
-                    <input type="text" id="modalMessage" style="float:left;flex-grow: 100;" />
-                    <input type="submit" id="modalSend" value="Send" class="send" />
+                <textarea id="modalMessage" form="frm-modal-message" ></textarea>
+                <form id="frm-modal-message">
+                    <input type="submit" id="modalSend" value="Send" class="send" style="max-height:70px"/>
                 </form>
             </div>
         </div>

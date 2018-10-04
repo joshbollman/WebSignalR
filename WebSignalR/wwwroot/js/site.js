@@ -32,7 +32,55 @@ $(document).ready(function () {
     $('#modalConnected').height(15).width(15);
     $('.modal-open').removeClass('modal-open');
     $('#modalChatID').html('closed');
+
+    $('textarea').each(function () {
+        this.setAttribute('style', 'flex-grow: 100;resize:none;height:26px;overflow-y:hidden;max-height:72px;');
+    }).on('input', function () {
+        var lines = this.value.split(/\r?\n/).length;
+        console.log(parseInt(lines.toString()) - 1);
+        var height = (26 + (22 * (lines - 1)));
+
+        if (height >= 70)
+            height = 70;
+
+        this.style.height = height + 'px';
+        //this.style.height = (this.scrollHeight) + 'px';
+
+        $('#modalSend').outerHeight(height);
+    });
+
+    $('textarea').keyup(function (event) {
+        if (event.keyCode == 13) {
+            var content = this.value;
+            var caret = getCaret(this);
+            if (event.shiftKey) {
+                this.value = content.substring(0, caret - 1) + "\r\n" + content.substring(caret, content.length);
+                event.stopPropagation();
+            } else {
+                this.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
+                $('form').submit();
+            }
+        }
+    });
 });
+
+
+function getCaret(el) {
+    if (el.selectionStart) {
+        return el.selectionStart;
+    } else if (document.selection) {
+        el.focus();
+        var r = document.selection.createRange();
+        if (r == null) {
+            return 0;
+        }
+        var re = el.createTextRange(), rc = re.duplicate();
+        re.moveToBookmark(r.getBookmark());
+        rc.setEndPoint('EndToStart', re);
+        return rc.text.length;
+    }
+    return 0;
+}
 /*----- Chat Modal -----*/
 
 var focused = true;
@@ -52,8 +100,6 @@ const connChatModal = new signalR.HubConnectionBuilder()
     .build();
 
 connChatModal.serverTimeoutInMilliseconds = 1000 * 60 * 5;
-
-//connChatModal.start().catch(err => console.error(err.toString()));
 
 connChatModal.onclose(function () {
     $('#modalConnected').attr('src', '/images/chat/error.png');
@@ -133,7 +179,7 @@ function disconnect() {
     $('#modalChatID').html('closed');
 }
 
-document.getElementById('frm-modal-message').addEventListener('submit', event => {
+$('#frm-modal-message').on('submit', event => {
     let message = $('#modalMessage').val();
     let group = $('#modalGroup').val();
     let nick = $('#modalHandle').val();
@@ -141,6 +187,9 @@ document.getElementById('frm-modal-message').addEventListener('submit', event =>
     $('#modalMessage').val('');
 
     var time = checkConnection();
+
+    var lines = message.split(/\r?\n/)
+    message = lines.join('<br/>');
 
     setTimeout(function () {
         joinGroup();
@@ -166,14 +215,8 @@ function appendLine(nick, message) {
 
     let li = document.createElement('li');
 
-    //if ($('#modalChatID').innerHTML.toString().localeCompare(connID) == 0) {
-    //    li.appendChild(msgElement);
-    //    li.style.cssText = "float:right;"; 
-    //}
-    //else {
     li.appendChild(nameElement);
     li.appendChild(msgElement);
-    //}
 
     $('#modalList').append(li);
 }
