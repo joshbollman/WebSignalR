@@ -37,7 +37,6 @@ $(document).ready(function () {
         this.setAttribute('style', 'flex-grow: 100;resize:none;height:26px;overflow-y:hidden;max-height:72px;');
     }).on('input', function () {
         var lines = this.value.split(/\r?\n/).length;
-        console.log(parseInt(lines.toString()) - 1);
         var height = (26 + (22 * (lines - 1)));
 
         if (height >= 70)
@@ -49,16 +48,25 @@ $(document).ready(function () {
         $('#modalSend').outerHeight(height);
     });
 
+    $('textarea').keydown(function (event) {
+        if (event.keyCode == 13) {
+            var content = this.value;
+            var caret = getCaret(this);
+            if (!event.shiftKey) {
+                event.preventDefault();
+                this.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
+                $('form').submit();
+                $('textarea').trigger("input");
+            }
+        }
+    });
+
     $('textarea').keyup(function (event) {
         if (event.keyCode == 13) {
             var content = this.value;
             var caret = getCaret(this);
             if (event.shiftKey) {
                 this.value = content.substring(0, caret - 1) + "\r\n" + content.substring(caret, content.length);
-                event.stopPropagation();
-            } else {
-                this.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
-                $('form').submit();
             }
         }
     });
