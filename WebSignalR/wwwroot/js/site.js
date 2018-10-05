@@ -137,12 +137,8 @@ connChatModal.on('SelfMessage', (message) => {
     $('#modalConnected').attr('src', '/images/chat/success.png');
     $('#modalConnected').height(15).width(15);
 
-    if (!focused) {
-        $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge_notify.ico');
-    }
-    else {
-        $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge.ico');
-    }
+    checkPageFocus();
+
     $("#modalBody").scrollTop(function () { return this.scrollHeight; });
 });
 
@@ -152,14 +148,20 @@ connChatModal.on('GroupMessage', (nick, message) => {
     $('#modalConnected').attr('src', '/images/chat/success.png');
     $('#modalConnected').height(15).width(15);
 
+    checkPageFocus();
+
+    $("#modalBody").scrollTop(function () { return this.scrollHeight; });
+});
+
+
+function checkPageFocus() {
     if (!focused) {
         $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge_notify.ico');
     }
     else {
         $('#favicon').attr('href', '/images/icons/BollmanITSolutions_badge.ico');
     }
-    $("#modalBody").scrollTop(function () { return this.scrollHeight; });
-});
+}
 
 function toggleConnection() {
     if ($('#modalChatID').html().localeCompare('closed') === 0) {
@@ -223,10 +225,20 @@ $('#frm-modal-message').on('submit', event => {
 });
 
 function joinGroup() {
+    let oldGroup = $('#modalGroup').data('old-value');
     let group = $('#modalGroup').val();
     let nick = $('#modalHandle').val();
 
-    connChatModal.invoke('JoinGroup', group, nick);
+    var time = checkConnection();
+
+    if (oldGroup.localeCompare(group) !== 0) {
+        setTimeout(function () {
+            connChatModal.invoke('LeaveGroup', oldGroup, nick);
+            connChatModal.invoke('JoinGroup', group, nick);
+        }, time * 1000);
+    }
+
+    $('#modalGroup').data('old-value', group);
 }
 
 function appendLine(nick, message) {
@@ -262,6 +274,6 @@ $(window).on("unload", function (e) {
     let group = $('input[name=modalGroup]:checked').val();
     let nick = $('#modalHandle').val();
 
-    checkConnection();
+    connChatModal.invoke('LeaveGroup', group, nick);
 });
 /*----- SignalR Chat -----*/

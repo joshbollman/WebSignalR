@@ -10,7 +10,7 @@ namespace WebSignalR
     public class Chat : Hub
     {
         #region Fields
-
+        const string _generalChat = "general";
         #endregion
 
         #region Properties
@@ -23,43 +23,58 @@ namespace WebSignalR
         #endregion
 
         #region Methods
-
-
-        public async Task JoinGroup(string groupName, string nick)
+        public override Task OnDisconnectedAsync(Exception exception)
         {
-            //await Clients.Client(Context.ConnectionId).SendAsync("ConnectionID", Context.ConnectionId);
+            foreach (var kvp in Connections.Where(m => m.Value.Any(u => u.ClientID == Context.ConnectionId)))
+            {
+                Connections[kvp.Key].RemoveAll(u => u.ClientID == Context.ConnectionId);
+            }
+            return base.OnDisconnectedAsync(exception);
+        }
 
-            if (groupName == "general")
+        public async Task JoinGroup(string groupName, string handle)
+        {
+            if (groupName == _generalChat)
                 return;
 
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
             if (!Connections.ContainsKey(groupName))
+            {
                 Connections.Add(groupName, new List<UserModel>() {
                     new UserModel() {
                         ClientID = Context.ConnectionId,
-                        UserName = nick,
+                        UserName = handle,
                         Enabled = true
                     }
                 });
+            }
+            else if (Connections[groupName].Any(u => u.ClientID == Context.ConnectionId))
+            {
+                return;
+            }
             else if (Connections[groupName].Count() == 10 || (ChatGroups.ContainsKey(groupName) && ChatGroups[groupName].InProgress))
             {
-                await Clients.Caller.SendAsync("GroupMessage", "", $"Group '{groupName}' is full.");
+                await SelfMessage($"{groupName} is full.");
                 return;
             }
             else
+            {
                 Connections[groupName].Add(
                     new UserModel()
                     {
                         ClientID = Context.ConnectionId,
-                        UserName = nick,
+                        UserName = handle,
                         Enabled = true
                     });
-
-            await Clients.Group(groupName).SendAsync("GroupMessage", "Server", nick + " has joined the group.");
+            }
+            await GroupMessage(groupName, "", $"{handle} has joined {groupName}.");
         }
 
-        public async Task LeaveGroup(string groupName, string nick)
+        public async Task LeaveGroup(string groupName, string handle)
         {
+            if (groupName == _generalChat)
+                return;
+
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
             if (!Connections.ContainsKey(groupName))
                 Connections.Add(groupName, new List<UserModel>());
@@ -69,23 +84,30 @@ namespace WebSignalR
             if (ChatGroups.ContainsKey(groupName) && ChatGroups[groupName].ClientOrder.Any(c => c.ClientID == Context.ConnectionId))
                 ChatGroups[groupName].ClientOrder.First(c => c.ClientID == Context.ConnectionId).Enabled = false;
 
-            await Clients.Group(groupName).SendAsync("GroupMessage", nick, nick + " has left the group.");
-        }
-
-        public async Task GroupMessage(string groupName, string nick, string message)
-        {
-            if (groupName == "general")
-            {
-                await Clients.Others.SendAsync("GroupMessage", nick + "[general]", message);
-                await SelfMessage("[general] " + message);
-            }
-
-            await Clients.Group(groupName).SendAsync("GroupMessage", nick, message);
+            await GroupMessage(groupName, "", $"{handle} has left {groupName}.");
         }
 
         public async Task SelfMessage(string message)
         {
             await Clients.Caller.SendAsync("SelfMessage", message);
+        }
+
+        public async Task GroupMessage(string groupName, string handle, string message)
+        {
+            if (groupName == _generalChat)
+            {
+                await Clients.Others.SendAsync("GroupMessage", handle + "[general]", message);
+                await SelfMessage("[general] " + message);
+                return;
+            }
+
+            await OthersInGroup(groupName, handle, message);
+            await SelfMessage(message);
+        }
+
+        public async Task OthersInGroup(string groupName, string handle, string message)
+        {
+            await Clients.OthersInGroup(groupName).SendAsync("GroupMessage", handle, message);
         }
         #endregion
 
