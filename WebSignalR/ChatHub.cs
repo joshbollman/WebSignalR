@@ -32,6 +32,12 @@ namespace WebSignalR
             return base.OnDisconnectedAsync(exception);
         }
 
+        public override Task OnConnectedAsync()
+        {
+            ServerMessageSelf("Connected to Server");
+            return base.OnConnectedAsync();
+        }
+
         public async Task JoinGroup(string groupName, string handle)
         {
             if (groupName == _generalChat)
