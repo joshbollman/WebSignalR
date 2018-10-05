@@ -185,10 +185,14 @@ function checkConnection() {
 
         let msgElement = document.createElement('em');
         msgElement.innerHTML = 'Connecting to chat...';
-        msgElement.style = 'float:left;color:#005A9C;';
 
-        $('#modalList').append(msgElement);
-        $('#modalList').append(document.createElement('br'));
+        let li = document.createElement('li');
+        li.style = 'width:100%;text-align:left;color:#005A9C;';
+
+        li.appendChild(msgElement);
+
+        $('#modalList').append(li);
+        
         connChatModal.start().catch(err => console.error(err.toString()));
         $('#modalConnected').attr('src', '/images/chat/success.png');
         $('#modalChatID').html('open');
@@ -249,6 +253,7 @@ function appendLine(nick, message) {
     msgElement.innerHTML = '<br/>' + message.replace("<script>", "&lt;script&gt;").replace("<\/script>", "&lt;/script&gt;");
 
     let li = document.createElement('li');
+    li.style = 'width:100%;text-align:left;';
 
     li.appendChild(nameElement);
     li.appendChild(msgElement);
@@ -259,10 +264,13 @@ function appendLine(nick, message) {
 function appendSelf(message) {
     let msgElement = document.createElement('em');
     msgElement.innerHTML = message.toString().toScriptlessString();
-    msgElement.style = 'float:right;color:#005A9C;';
+    //msgElement.style = 'float:right;color:#005A9C;';
 
-    $('#modalList').append(msgElement);
-    $('#modalList').append(document.createElement('br'));
+    let li = document.createElement('li');
+    li.style = 'width:100%;text-align:right;color:#005A9C;';
+    li.appendChild(msgElement);
+
+    $('#modalList').append(li);
 }
 
 String.prototype.toScriptlessString = function () {
