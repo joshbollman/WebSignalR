@@ -54,7 +54,7 @@ namespace WebSignalR
             }
             else if (Connections[groupName].Count() == 10 || (ChatGroups.ContainsKey(groupName) && ChatGroups[groupName].InProgress))
             {
-                await SelfMessage($"{groupName} is full.");
+                await ServerMessageSelf($"{groupName} is full.");
                 return;
             }
             else
@@ -67,7 +67,7 @@ namespace WebSignalR
                         Enabled = true
                     });
             }
-            await GroupMessage(groupName, "", $"{handle} has joined {groupName}.");
+            await ServerMessageGroup(groupName, $"{handle} has joined {groupName}.");
         }
 
         public async Task LeaveGroup(string groupName, string handle)
@@ -84,25 +84,41 @@ namespace WebSignalR
             if (ChatGroups.ContainsKey(groupName) && ChatGroups[groupName].ClientOrder.Any(c => c.ClientID == Context.ConnectionId))
                 ChatGroups[groupName].ClientOrder.First(c => c.ClientID == Context.ConnectionId).Enabled = false;
 
-            await GroupMessage(groupName, "", $"{handle} has left {groupName}.");
+            await ServerMessageGroup(groupName, $"{handle} has left {groupName}.");
+            await ServerMessageSelf($"You have left {groupName}.");
         }
 
-        public async Task SelfMessage(string message)
+        public async Task ServerMessageSelf(string msgProcessed)
         {
-            await Clients.Caller.SendAsync("SelfMessage", message);
+            await Clients.Caller.SendAsync("ServerMessage", msgProcessed);
+        }
+
+        public async Task ServerMessageGroup(string groupName, string msgProcessed)
+        {
+            await Clients.Group(groupName).SendAsync("ServerMessage", msgProcessed);
+        }
+
+        public async Task ServerMessageGroupOthers(string groupName, string msgProcessed)
+        {
+            await Clients.OthersInGroup(groupName).SendAsync("ServerMessage", msgProcessed);
+        }
+
+        public async Task ServerMessageAll(string msgProcessed)
+        {
+            await Clients.All.SendAsync("ServerMessage", msgProcessed);
+        }
+
+        public async Task SelfMessage(string groupName, string msgProcessed)
+        {
+            await Clients.Caller.SendAsync("SelfMessage", (groupName == _generalChat ? "[general] " : ""), msgProcessed);
         }
 
         public async Task GroupMessage(string groupName, string handle, string message)
         {
-            if (groupName == _generalChat)
-            {
-                await Clients.Others.SendAsync("GroupMessage", handle + "[general]", message);
-                await SelfMessage("[general] " + message);
-                return;
-            }
+            var processed = message.ProcessMessage();
 
-            await OthersInGroup(groupName, handle, message);
-            await SelfMessage(message);
+            await Clients.Others.SendAsync("GroupMessage", handle + (groupName == _generalChat ? " [general]" : ""), processed);
+            await SelfMessage(groupName, processed);
         }
 
         public async Task OthersInGroup(string groupName, string handle, string message)

@@ -54,7 +54,7 @@ $(document).ready(function () {
             var caret = getCaret(this);
             if (!event.shiftKey) {
                 event.preventDefault();
-                this.value = content.substring(0, caret - 1) + content.substring(caret, content.length);
+                this.value = content.substring(0, caret - 1) + content.substring(caret - 1, content.length);
                 $('form').submit();
                 $('textarea').trigger("input");
             }
@@ -131,8 +131,8 @@ connChatModal.on('ConnectionID', (message) => {
     checkConnection();
 });
 
-connChatModal.on('SelfMessage', (message) => {
-    appendSelf(message);
+connChatModal.on('SelfMessage', (prefix, message) => {
+    appendSelf(prefix, message);
 
     $('#modalConnected').attr('src', '/images/chat/success.png');
     $('#modalConnected').height(15).width(15);
@@ -144,6 +144,17 @@ connChatModal.on('SelfMessage', (message) => {
 
 connChatModal.on('GroupMessage', (nick, message) => {
     appendLine(nick, message);
+
+    $('#modalConnected').attr('src', '/images/chat/success.png');
+    $('#modalConnected').height(15).width(15);
+
+    checkPageFocus();
+
+    $("#modalBody").scrollTop(function () { return this.scrollHeight; });
+});
+
+connChatModal.on('ServerMessage', (message) => {
+    appendServer(message);
 
     $('#modalConnected').attr('src', '/images/chat/success.png');
     $('#modalConnected').height(15).width(15);
@@ -184,6 +195,7 @@ function checkConnection() {
         console.log('restarting connection...');
 
         let msgElement = document.createElement('em');
+        msgElement.style = "font-size: 85%;";
         msgElement.innerHTML = 'Connecting to chat...';
 
         let li = document.createElement('li');
@@ -197,7 +209,7 @@ function checkConnection() {
         $('#modalConnected').attr('src', '/images/chat/success.png');
         $('#modalChatID').html('open');
 
-        return 2;
+        return 1;
     }
 
     return 0;
@@ -245,15 +257,33 @@ function joinGroup() {
     $('#modalGroup').data('old-value', group);
 }
 
-function appendLine(nick, message) {
-    let nameElement = document.createElement('strong');
-    nameElement.innerText = `${nick}:`;
+function appendServer(message) {
+    let prefixElement = document.createElement('em');
+    prefixElement.style = "font-size: 75%;";
+    prefixElement.innerHTML = convertDate();
 
     let msgElement = document.createElement('em');
-    msgElement.innerHTML = '<br/>' + message.replace("<script>", "&lt;script&gt;").replace("<\/script>", "&lt;/script&gt;");
+    msgElement.style = "font-size: 85%;text-align:center;";
+    msgElement.innerHTML = '<br/>' + message;
 
     let li = document.createElement('li');
-    li.style = 'width:100%;text-align:left;';
+    li.style = 'margin-top:5px;width:100%;'; //color:#005A9C
+    li.appendChild(prefixElement);
+    li.appendChild(msgElement);
+
+    $('#modalList').append(li);
+}
+
+function appendLine(nick, message) {
+    let nameElement = document.createElement('div');
+    nameElement.style = "font-size: 85%;color:#666666;";
+    nameElement.innerHTML = nick + '&nbsp;&nbsp;' + convertDate();
+
+    let msgElement = document.createElement('em');
+    msgElement.innerHTML = message;
+
+    let li = document.createElement('li');
+    li.style = 'margin-top:5px;width:100%;text-align:left;padding-left:5px;padding-bottom:5px;word-wrap: break-word;background-color:#e6f0fa';//ebe6fa#e8e2ff';
 
     li.appendChild(nameElement);
     li.appendChild(msgElement);
@@ -261,17 +291,36 @@ function appendLine(nick, message) {
     $('#modalList').append(li);
 }
 
-function appendSelf(message) {
+function appendSelf(prefix, message) {
+    let prefixElement = document.createElement('div');
+    prefixElement.style = "font-size: 85%;color:#666666;";
+    prefixElement.innerHTML = convertDate() + ' ' + prefix;
+
     let msgElement = document.createElement('em');
-    msgElement.innerHTML = message.toString().toScriptlessString();
-    //msgElement.style = 'float:right;color:#005A9C;';
+    msgElement.innerHTML = message;
 
     let li = document.createElement('li');
-    li.style = 'width:100%;text-align:right;color:#005A9C;';
+    li.style = 'margin-top:5px;width:100%;text-align:right;padding-right:5px;padding-bottom:5px;word-wrap: break-word;background-color:#ebe6fa';//e6f0fa#e2f3ff';
+    li.appendChild(prefixElement);
     li.appendChild(msgElement);
 
     $('#modalList').append(li);
 }
+
+function convertDate() {
+    var date = new Date();
+    var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    var day = date.getDate();
+    var monthIndex = date.getMonth();
+    var year = date.getFullYear();
+    var ampm = date.getHours() < 12;
+    var hour = date.getHours() - (ampm ? 0 : 12);
+    hour = (hour === 0 ? 12 : hour)
+    var minute = date.getMinutes();
+
+    return day + " " + monthNames[monthIndex].substring(0, 3) + /*" " + year +*/ "&nbsp;&nbsp;" + hour + ":" + padZero(minute) + " " + (ampm ? "AM" : "PM");
+}function padZero(s) { return (s < 10) ? '0' + s : s; }
 
 String.prototype.toScriptlessString = function () {
     console.log(this);

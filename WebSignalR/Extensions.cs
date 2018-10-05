@@ -20,12 +20,18 @@ namespace WebSignalR
     static class MyExtensions
     {
         #region Message Formatting and Sanitizing
+        public static string ProcessMessage(this string message) => message.SanitizeMessage().FormatCode().FormatLink().FormatImageTag(0, 200).ReplaceLineBreaks();
+
         /// <summary>
         /// Transforms '&lt;' and '&gt;' to "&amp;lt;" and "&amp;gt;", respectively
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static string SanitizeMessage(this string message) => message.Replace("<", "&lt;").Replace(">", "&gt;");
+        public static string SanitizeMessage(this string message)
+        {
+            var m = message.Replace("<br/>", "\r\n").Replace("<br />", "\r\n").Replace("<br>", "\r\n");
+            return m.Replace("<", "&lt;").Replace(">", "&gt;");
+        }
 
         /// <summary>
         /// Transforms spaces " " to "&amp;nbsp;"
@@ -92,7 +98,7 @@ namespace WebSignalR
             Match linkMatch;
             if (message.TrimStart().StartsWith("$link", StringComparison.InvariantCultureIgnoreCase) && (linkMatch = Regex.Match(message, @"\(([^)]+)\)")).Groups.Count > 1)
             {
-                string link = $"<a href=\"{linkMatch.Groups[1].Value}\">{{0}}</a>";
+                string link = $"<a style=\"text-decoration:underline;\" href=\"{linkMatch.Groups[1].Value}\">{{0}}</a>";
 
                 Match displayMatch;
                 if ((displayMatch = Regex.Match(message, @"\[([^)]+)\]")).Groups.Count > 1)
@@ -116,9 +122,9 @@ namespace WebSignalR
             if (message.TrimStart().StartsWith("$code", StringComparison.InvariantCultureIgnoreCase))
             {
                 var code = message.Substring(message.IndexOf(':') + 1).TrimStart();
-                code = ReplaceSpaces(code.ReplaceLineBreaks());
+                code = code.ReplaceSpaces();
 
-                string element = $"<code>{code}</code>";
+                string element = $"<code style=\"text-align:left !important;\">{code}</code>";
 
                 return element;
             }
