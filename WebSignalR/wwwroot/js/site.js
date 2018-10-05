@@ -37,7 +37,7 @@ $(document).ready(function () {
         this.setAttribute('style', 'flex-grow: 100;resize:none;height:26px;overflow-y:hidden;max-height:72px;');
     }).on('input', function () {
         var lines = this.value.split(/\r?\n/).length;
-        var height = (26 + (22 * (lines - 1)));
+        var height = 26 + 22 * (lines - 1);
 
         if (height >= 70)
             height = 70;
@@ -49,7 +49,7 @@ $(document).ready(function () {
     });
 
     $('textarea').keydown(function (event) {
-        if (event.keyCode == 13) {
+        if (event.keyCode === 13) {
             var content = this.value;
             var caret = getCaret(this);
             if (!event.shiftKey) {
@@ -62,7 +62,7 @@ $(document).ready(function () {
     });
 
     $('textarea').keyup(function (event) {
-        if (event.keyCode == 13) {
+        if (event.keyCode === 13) {
             var content = this.value;
             var caret = getCaret(this);
             if (event.shiftKey) {
@@ -79,7 +79,7 @@ function getCaret(el) {
     } else if (document.selection) {
         el.focus();
         var r = document.selection.createRange();
-        if (r == null) {
+        if (r === null) {
             return 0;
         }
         var re = el.createTextRange(), rc = re.duplicate();
